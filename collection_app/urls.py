@@ -8,4 +8,5 @@ urlpatterns = [
     path('overdue/list/<int:da_code>',views.cash_overdue),
     path('overdue',views.collect_overdue),
     path('report',views.monthly_report),
+    path('overdue/list/v2/<int:da_code>', views.overdue_list_v2)
 ]
