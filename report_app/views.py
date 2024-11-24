@@ -42,11 +42,9 @@ def dashboard_report(request,sap_id):
 	            "(SELECT SUM(d.cash_collection) c FROM rdl_delivery d WHERE d.billing_date = CURRENT_DATE() AND d.da_code = '%s' AND d.route_code = %s AND delivery_status = 'Done' AND cash_collection_status = 'Done') total_collection_amount," \
 	            "(SELECT SUM(dl.return_net_val) c FROM rdl_delivery d INNER JOIN rdl_delivery_list dl ON d.id=dl.delivery_id WHERE d.billing_date = CURRENT_DATE() AND d.da_code = '%s' AND d.route_code = %s AND d.delivery_status = 'Done' AND dl.return_net_val IS NOT NULL) total_return_amount," \
 	            "(SELECT SUM(rl.return_quantity) c FROM rdl_return_list rl WHERE rl.billing_date = CURRENT_DATE() AND rl.da_code = '%s' AND rl.route_code = %s ) total_return_quantity," \
-                "(SELECT SUM(d.due_amount) c FROM rdl_delivery d WHERE d.billing_date = CURRENT_DATE() AND d.da_code = '%s' AND d.route_code = %s) total_due," \
-                "(SELECT rs.description FROM rdl_route_sap rs WHERE rs.route=%s) AS route_name," \
-                "(SELECT COUNT(DISTINCT sis.gate_pass_no) FROM rdl_delivery_info_sap dis INNER JOIN rpl_sales_info_sap sis ON dis.billing_doc_no=sis.billing_doc_no WHERE dis.billing_date=CURRENT_DATE() AND dis.da_code=%s AND dis.route=%s GROUP BY sis.gate_pass_no) AS total_gate_pass,"\
-                "(SELECT COUNT(DISTINCT sis.partner) FROM rdl_delivery_info_sap dis INNER JOIN rpl_sales_info_sap sis ON dis.billing_doc_no=sis.billing_doc_no WHERE dis.billing_date=CURRENT_DATE() AND dis.da_code=%s AND dis.route=%s GROUP BY sis.gate_pass_no) AS total_customer;" 
-        result = execute_raw_query(sql,[sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,route,sap_id,route,sap_id,route])
+                "(SELECT SUM(d.due_amount) c FROM rdl_delivery d WHERE d.billing_date = CURRENT_DATE() AND d.da_code = '%s' AND d.route_code = %s) total_due;"
+        result = execute_raw_query(sql,[sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route,sap_id,route])
+        print(sql)
 
 
         # sql="SELECT " \
@@ -82,10 +80,6 @@ def dashboard_report(request,sap_id):
             'total_return_amount': result[0][6], 
             'total_return_quantity': result[0][7],
             'due_amount_total': result[0][8],
-            'due_quantity_total': route,
-            'route_name': result[0][9],
-            'total_gate_pass': result[0][10],
-            'total_customer': result[0][11],
             'previous_day_due': 0,
             'time_interval': time_interval,
             'distance': distance

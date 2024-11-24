@@ -398,6 +398,8 @@ def cash_overdue(request,da_code):
         if partner:
             sql += f" AND d.partner={partner}"
         data_list = DeliveryInfoModel.objects.raw(sql,[route])
+        
+        print(sql)
         if len(data_list) == 0:
             return Response({"success": False, "message": "Data not available!"}, status=status.HTTP_200_OK)
         else:
@@ -619,7 +621,7 @@ def overdue_list_v2(request, da_code):
             cursor.execute(sql_query, [route_code])
             rows = cursor.fetchall()
             
-
+        print(sql_query)
         # Group results by partner
         result = defaultdict(lambda: {
             "partner": None,
