@@ -575,7 +575,7 @@ def overdue_list_v2(request, da_code):
         
         sql_query = """
         SELECT 
-            d.partner,
+            d.partner, 
             d.billing_doc_no,
             d.billing_date,
             d.gate_pass_no,
@@ -584,6 +584,8 @@ def overdue_list_v2(request, da_code):
             d.net_val,
             d.return_amount,
             dl.matnr,
+            m.material_name,
+            m.producer_company,
             dl.batch,
             dl.delivery_quantity,
             dl.delivery_net_val,
@@ -592,6 +594,8 @@ def overdue_list_v2(request, da_code):
             CONCAT(c.name1,c.name2) AS customer_name,
             CONCAT(c.street,c.street1,c.street2) AS customer_address,
             c.mobile_no AS customer_mobile,
+            cl.latitude AS customer_latitude,
+            cl.longitude AS customer_longitude,
             ul.full_name AS da_full_name,
             ul.mobile_number AS da_mobile_no
         FROM 
@@ -599,6 +603,8 @@ def overdue_list_v2(request, da_code):
         LEFT JOIN rpl_customer c ON d.partner=c.partner
         LEFT JOIN rdl_user_list ul ON d.da_code=ul.sap_id
         LEFT JOIN rdl_delivery_list dl ON d.id = dl.delivery_id
+        LEFT JOIN rdl_customer_location cl ON d.partner=cl.customer_id
+        INNER JOIN rpl_material m ON dl.matnr=m.matnr
         WHERE 
             d.route_code = %s 
             AND d.due_amount != 0 
@@ -612,6 +618,7 @@ def overdue_list_v2(request, da_code):
         with connection.cursor() as cursor:
             cursor.execute(sql_query, [route_code])
             rows = cursor.fetchall()
+            
 
         # Group results by partner
         result = defaultdict(lambda: {
@@ -620,6 +627,8 @@ def overdue_list_v2(request, da_code):
             "customer_name": None,
             "customer_address": None,
             "customer_mobile": None,
+            "customer_latitude": None,
+            "customer_longitude": None,
             "da_full_name": None,
             "da_mobile_no": None,
             "billing_docs": []
@@ -632,11 +641,13 @@ def overdue_list_v2(request, da_code):
             # Initialize partner info if not already set
             if result[partner]["partner_id"] is None:
                 result[partner]["partner_id"] = partner
-                result[partner]["customer_name"] = row[14]  # customer_name from SQL query
-                result[partner]["customer_address"] = row[15]  # customer_address from SQL query
-                result[partner]["customer_mobile"] = row[16]  # customer_mobile from SQL query
-                result[partner]["da_full_name"] = row[17]  # da_full_name from SQL query
-                result[partner]["da_mobile_no"] = row[18]  # da_mobile_no from SQL query
+                result[partner]["customer_name"] = row[16]  # customer_name from SQL query
+                result[partner]["customer_address"] = row[17]  # customer_address from SQL query
+                result[partner]["customer_mobile"] = row[18]  # customer_mobile from SQL query
+                result[partner]["customer_latitude"] = row[19] # customer_latitude from SQL query
+                result[partner]["customer_longitude"] = row[20]  # customer_longitude from SQL query
+                result[partner]["da_full_name"] = row[21]  # da_full_name from SQL query
+                result[partner]["da_mobile_no"] = row[22]  # da_mobile_no from SQL query
 
             # Check if the billing_doc_no already exists for this partner
             billing_doc = next((item for item in result[partner]["billing_docs"] if item["billing_doc_no"] == str(billing_doc_no)), None)
@@ -646,6 +657,7 @@ def overdue_list_v2(request, da_code):
                 billing_doc = {
                     "billing_doc_no": str(billing_doc_no),
                     "billing_date": billing_date,
+                    "producer_company": row[10],
                     "gate_pass_no": row[3],
                     "da_code": row[4],
                     "due_amount": row[5],
@@ -658,11 +670,13 @@ def overdue_list_v2(request, da_code):
             # Append material details to the existing billing_doc's "materials"
             billing_doc["materials"].append({
                 "matnr": row[8],
-                "batch": row[9],
-                "delivery_quantity": row[10],
-                "delivery_net_val": row[11],
-                "return_quantity": row[12],
-                "return_net_val": row[13],
+                "material_name": row[9],
+                "producer_company": row[10],
+                "batch": row[11],
+                "delivery_quantity": row[12],
+                "delivery_net_val": row[13],
+                "return_quantity": row[14],
+                "return_net_val": row[15],
             })
 
         # Convert defaultdict to a regular dict for JSON compatibility
