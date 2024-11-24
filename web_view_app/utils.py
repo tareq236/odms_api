@@ -21,7 +21,7 @@ def get_sap_data(da_code):
         JOIN 
             rpl_sales_info_sap AS sis ON dis.billing_doc_no = sis.billing_doc_no
         WHERE 
-            dis.da_code = %s AND dis.billing_date = '2024-11-18'
+            dis.da_code = %s AND dis.billing_date = CURRENT_DATE 
         GROUP BY 
             dis.da_code, dis.route, dis.billing_date, sis.gate_pass_no
     '''
@@ -83,7 +83,7 @@ def get_delivery_data(da_code):
                SUM(return_amount) AS total_return_amount,
                SUM(due_amount) AS total_due_amount
         FROM rdl_delivery 
-        WHERE da_code = %s AND billing_date = '2024-11-18'
+        WHERE da_code = %s AND billing_date = CURRENT_DATE 
         GROUP BY gate_pass_no;
     """
     
@@ -241,7 +241,6 @@ def get_due_amount_list(da_code):
 
 
 def get_product_return_list(da_code):
-    billing_date='2024-11-18'
     sql = (
         "SELECT rl.id, rl.matnr, m.material_name, rl.batch, rl.return_quantity, "
         "rl.return_net_val, rl.partner, rl.billing_doc_no, rl.gate_pass_no, "
@@ -249,9 +248,9 @@ def get_product_return_list(da_code):
         "FROM rdl_return_list rl "
         "INNER JOIN rpl_material m ON rl.matnr = m.matnr "
         "INNER JOIN rpl_customer c ON rl.partner=c.partner "
-        "WHERE rl.da_code = %s AND rl.billing_date = %s;"
+        "WHERE rl.da_code = %s AND rl.billing_date = CURRENT_DATE;"
     )
-    query_results = ReturnListModel.objects.raw(sql, [da_code,billing_date])
+    query_results = ReturnListModel.objects.raw(sql, [da_code])
     print(sql)
     product_list={}
     for item in query_results:
